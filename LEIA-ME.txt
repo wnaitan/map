@@ -54,4 +54,4 @@ LIMITES CONHECIDOS (honestos)
     ocupados, o app tenta de novo. Use com moderação.
 
 CRÉDITOS
-  Mapas © OpenStreetMap contributors (ODbL). Países e cidades: Natural Earth. 
+  Mapas © OpenStreetMap contributors (ODbL). Países e cidades: Natural Earth.       
