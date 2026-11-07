@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b3a5b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>NAVI OFFLINE</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="map"></canvas>
+
+<div id="top">
+  <div class="search card">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="q" type="search" placeholder="Buscar rua, bairro, local ou cidade" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button id="qx" hidden aria-label="Limpar">✕</button>
+  </div>
+  <div id="results" class="results card" hidden></div>
+</div>
+
+<div id="chips">
+  <button class="chip" id="chipGps"><i></i><span>GPS desligado</span></button>
+  <button class="chip" id="chipOff"><i></i><span>Mapas offline</span></button>
+  <span class="chip" id="chipHead" hidden></span>
+</div>
+
+<div id="fab">
+  <button id="bMode" aria-label="Bússola: girar o mapa ou fixar o norte no topo">
+    <svg viewBox="0 0 40 40" id="needle"><circle cx="20" cy="20" r="17" fill="#fff" stroke="#c5d0d8" stroke-width="2"/><path d="M20 5l6 15H14z" fill="#d32f2f"/><path d="M20 35l6-15H14z" fill="#90a4ae"/><text x="20" y="14.5" font-size="7" text-anchor="middle" fill="#fff" font-weight="700" font-family="Arial">N</text></svg>
+  </button>
+  <button id="bLocate" aria-label="Centralizar na minha localização">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg>
+  </button>
+  <button id="zin" aria-label="Aproximar">+</button>
+  <button id="zout" aria-label="Afastar">−</button>
+</div>
+
+<div id="info"><div id="scaleBar"></div><div id="scaleTxt"></div><div id="coords"></div></div>
+<div id="attr" hidden>© OpenStreetMap contributors</div>
+
+<!-- cartão do destino / ponto tocado -->
+<div id="dcard" class="card" hidden>
+  <button class="x" id="dClose" aria-label="Fechar">✕</button>
+  <h3 id="dTitle"></h3>
+  <div class="sub" id="dSub"></div>
+  <div class="row"><button class="btn peq" id="dCar">🚗 Rota de carro</button><button class="btn peq" id="dFoot">🚶 Rota a pé</button></div>
+  <div class="sum" id="dSum" hidden></div>
+  <button class="btn" id="dStart" hidden>Iniciar navegação</button>
+  <div class="row wrap" style="margin-top:8px">
+    <button class="btn sec peq" id="dFav">☆ Salvar</button>
+    <button class="btn sec peq" id="dCopy">Copiar</button>
+    <button class="btn sec peq" id="dShare">Compartilhar</button>
+    <button class="btn sec peq" id="dMeasure">Medir</button>
+    <button class="btn sec peq" id="dSteps" hidden>Ver passos</button>
+  </div>
+  <div class="steps" id="dStepList" hidden></div>
+</div>
+
+<div id="measure" class="card" hidden>
+  <b>Medir distância</b>
+  <p id="mTxt" style="margin:6px 0;font-size:15px"></p>
+  <div class="row wrap">
+    <button class="btn sec peq" id="mUndo">Desfazer</button>
+    <button class="btn sec peq" id="mMe">Partir de mim</button>
+    <button class="btn sec peq" id="mClear">Limpar</button>
+    <button class="btn peq" id="mDone">Sair</button>
+  </div>
+</div>
+
+<!-- navegação ativa -->
+<div id="navTop" hidden>
+  <div class="ico" id="nIco">⬆</div>
+  <div style="flex:1;min-width:0"><div class="d" id="nDist">—</div><div class="t" id="nText">—</div><div class="nxt" id="nNext"></div></div>
+</div>
+<div id="navBottom" class="card" hidden>
+  <div class="grid">
+    <div><b id="nvRem">—</b><small>restante</small></div>
+    <div><b id="nvEta">—</b><small>chegada</small></div>
+    <div><b id="nvLeft">—</b><small>tempo</small></div>
+    <div><b id="nvSpd">—</b><small>km/h</small></div>
+  </div>
+  <div id="navAlert"></div>
+  <div class="row"><button class="btn sec peq" id="nvVoice">🔊 Voz</button><button class="btn sec peq" id="nvRecalc">Recalcular</button><button class="btn perigo peq" id="nvStop">Encerrar</button></div>
+</div>
+
+<nav id="nav">
+  <button id="nMap" class="on"><svg viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Mapa</button>
+  <button id="nCompass"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Bússola</button>
+  <button id="nPlaces"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>Lugares</button>
+  <button id="nOffline"><svg viewBox="0 0 24 24"><path d="M12 4v10M8 10l4 4 4-4"/><path d="M5 18h14"/></svg>Offline</button>
+  <button id="nMore"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>Mais</button>
+</nav>
+
+<!-- TELA DA BÚSSOLA -->
+<section id="screenCompass" class="screen" hidden aria-label="Bússola">
+  <h2>Bússola</h2>
+  <svg id="dial" viewBox="-160 -160 320 320"></svg>
+  <div id="deg">—</div>
+  <div id="card8">—</div>
+  <div id="cWarn"></div>
+  <div class="kv">
+    <div>Latitude<b id="cLat">—</b></div><div>Longitude<b id="cLon">—</b></div>
+    <div>Precisão do GPS<b id="cAcc">—</b></div><div>Velocidade<b id="cSpd">—</b></div>
+    <div>Referência<b id="cRef">—</b></div><div>Campo magnético<b id="cMag">—</b></div>
+  </div>
+  <div class="row"><button class="btn sec" id="cMode">Girar o mapa</button><button class="btn sec" id="cGps">Ligar GPS</button></div>
+  <div class="row"><button class="btn sec" id="cCopy">Copiar lat/lon</button><button class="btn sec" id="cShare">Compartilhar</button></div>
+  <p class="nota" id="cSensors" style="margin-top:12px"></p>
+</section>
+
+<!-- LUGARES -->
+<section id="sPlaces" class="sheet" aria-label="Lugares">
+  <button class="fechar" data-close>Fechar</button>
+  <h2>Meus lugares</h2>
+  <div class="tabs" id="plTabs"><button data-t="fav" class="on">Favoritos</button><button data-t="pt">Pontos</button><button data-t="hist">Histórico</button></div>
+  <div id="plList"></div>
+  <p class="nota">Dica: segure o dedo em qualquer ponto do mapa para marcar um destino, salvar um ponto, copiar as coordenadas ou medir distâncias.</p>
+</section>
+
+<!-- OFFLINE -->
+<section id="sOffline" class="sheet" aria-label="Mapas offline">
+  <button class="fechar" data-close>Fechar</button>
+  <h2>Mapas offline</h2>
+  <p class="nota" id="offStatus"></p>
+  <h3>Baixar mapa de ruas (com internet, uma vez)</h3>
+  <p class="nota">Baixa ruas, avenidas, bairros e locais do OpenStreetMap e guarda no celular. Com isso a busca e as rotas funcionam sem internet.</p>
+  <input id="areaQ" type="text" placeholder="Cidade, estado ou região (ex.: Londrina)" autocomplete="off">
+  <div class="row"><button class="btn sec" id="areaFind">Procurar</button><button class="btn sec" id="areaView">Área da tela</button></div>
+  <div id="areaRes"></div>
+  <div id="areaBox" hidden>
+    <div class="item"><b id="areaTitle"></b><small id="areaInfo"></small></div>
+    <label class="nota" for="areaMode">Tipo de mapa</label>
+    <select id="areaMode">
+      <option value="full">Detalhado: todas as ruas, bairros e locais (cidade)</option>
+      <option value="main">Só estradas principais (viagens entre cidades e estados)</option>
+    </select>
+    <label class="nota" for="areaName">Nome</label>
+    <input id="areaName" type="text" maxlength="40" placeholder="Ex.: Minha cidade">
+    <button class="btn" id="areaGo">Baixar para usar offline</button>
+  </div>
+  <div id="areaProg" hidden>
+    <div class="bar"><i id="areaBar"></i></div>
+    <p class="nota" id="areaTxt"></p>
+    <button class="btn sec" id="areaCancel">Cancelar</button>
+  </div>
+  <h3>Mapas salvos no aparelho</h3>
+  <div id="regList"></div>
+  <h3>Mundo (países e cidades grandes)</h3>
+  <p class="nota" id="worldInfo"></p>
+  <button class="btn sec" id="worldGo">Baixar mundo</button>
+  <p class="nota" id="storeInfo" style="margin-top:12px"></p>
+  <p class="nota">Dados: © OpenStreetMap contributors, obtidos pelo servidor público Overpass. Por ser gratuito, ele limita o volume: áreas muito grandes são baixadas em blocos, de pouco em pouco.</p>
+</section>
+
+<!-- MAIS -->
+<section id="sMore" class="sheet" aria-label="Mais">
+  <button class="fechar" data-close>Fechar</button>
+  <h2>Ajustes</h2>
+  <label class="sw"><span>Modo noturno<small>Mapa e telas escuros</small></span><input type="checkbox" id="swNight"></label>
+  <label class="sw"><span>Instruções por voz<small>Usa a voz do próprio aparelho (precisa de uma voz em português instalada)</small></span><input type="checkbox" id="swVoice"></label>
+  <label class="sw"><span>Economia de bateria<small>Menos quadros por segundo, bússola e GPS pausam com a tela apagada (fora da navegação)</small></span><input type="checkbox" id="swSaver"></label>
+  <label class="sw"><span>Manter a tela acesa na navegação<small>Só enquanto navega</small></span><input type="checkbox" id="swWake"></label>
+  <h3>Declinação magnética</h3>
+  <p class="nota">O sensor do celular normalmente aponta o norte <b>magnético</b>. No Brasil ele costuma ficar entre 10° e 25° a oeste do norte verdadeiro (valor negativo). Informe a declinação do seu local para a bússola mostrar o norte verdadeiro (use um calculador de declinação da NOAA ou do Observatório Nacional).</p>
+  <input id="declIn" type="number" step="0.1" min="-60" max="60" placeholder="Declinação em graus (ex.: -18.5)">
+  <div class="row"><button class="btn sec" id="declSave">Salvar</button><button class="btn sec" id="declAuto">Medir pelo GPS</button></div>
+  <p class="nota" id="declInfo"></p>
+  <h3>Legenda</h3>
+  <div class="leg"><span class="sq" style="background:#f4a0b0"></span>Rodovias e vias expressas</div>
+  <div class="leg"><span class="sq" style="background:#fdc88e"></span>Avenidas e estradas principais</div>
+  <div class="leg"><span class="sq" style="background:#fde9a0"></span>Vias secundárias</div>
+  <div class="leg"><span class="sq" style="background:#fff"></span>Ruas comuns</div>
+  <div class="leg"><span class="sq"><span style="width:26px;border-top:2px dashed #c0645a"></span></span>Caminhos e calçadas</div>
+  <div class="leg"><span class="sq" style="background:#cfe8c4"></span>Parques e áreas verdes</div>
+  <div class="leg"><span class="sq" style="background:#aad3df"></span>Rios, lagos e represas</div>
+  <div class="leg"><span class="sq" style="background:#1769aa"></span>Rota calculada</div>
+  <div class="leg"><span class="sq"><span style="width:14px;height:14px;border-radius:50%;background:#1a73e8;border:2px solid #fff;box-shadow:0 0 0 1px #888"></span></span>Você (azul claro ao redor = precisão do GPS)</div>
+  <div class="leg"><span class="sq" style="font-size:16px">⭐</span>Favorito &nbsp; 📍 ponto seu &nbsp; 🚩 destino</div>
+  <h3>Como funciona</h3>
+  <p><b>Seu GPS e sua bússola são lidos dos sensores reais do aparelho.</b> O app nunca inventa posição, velocidade ou direção. Quando não há sinal ou a precisão é ruim, ele avisa. Nada é enviado a lugar nenhum: sem conta, sem cadastro.</p>
+  <p><b>Sem internet:</b> depois de baixar um mapa (aba Offline), buscar ruas, traçar rotas e navegar funcionam sem dados móveis. O GPS do aparelho não usa internet.</p>
+  <p><b>Limites:</b> o app não conhece restrições de conversão, semáforos nem trânsito. O tempo estimado usa velocidades típicas por tipo de via. Confira sempre a sinalização real.</p>
+  <button class="btn" id="installBtn" hidden>Instalar no celular</button>
+  <p class="nota" id="helpStatus"></p>
+  <p class="nota">Países e cidades: Natural Earth (domínio público). Ruas e locais: © OpenStreetMap contributors (ODbL). Busca de cidades para download: Nominatim (só quando você pede).</p>
+</section>
+
+<div id="setup" hidden>
+  <div class="card">
+    <h2 id="setupTitle">Bem-vindo ao NAVI OFFLINE</h2>
+    <p id="setupTxt">Na primeira vez, o app baixa o mapa-múndi (países e cidades grandes), pouco mais de 1 MB. Depois, vá em “Offline” e baixe a sua cidade para ter ruas e rotas sem internet.</p>
+    <div class="bar"><i id="setupBar"></i></div>
+    <button class="btn" id="setupGo">Baixar mapa-múndi</button>
+    <button class="btn sec" id="setupSkip">Pular por enquanto</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script src="routing.js"></script>
+<script src="core.js"></script>
+<script src="vector.js"></script>
+<script src="sensors.js"></script>
+<script src="nav.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+NAVI OFFLINE - GPS com mapas, rotas e bússola que funcionam sem internet
+==========================================================================
+
+ARQUIVOS (todos na mesma pasta, sem subpastas)
+  index.html  style.css  routing.js  core.js  vector.js  sensors.js  nav.js  ui.js
+  sw.js  manifest.webmanifest  icon-192.png  icon-512.png
+
+PASSO 1 - Colocar na internet (uma vez, grátis)
+  O Android só libera GPS, bússola e modo offline em endereço seguro (https).
+  1. github.com > "+" > New repository. Nome: navi. Marque "Public". Create.
+  2. "uploading an existing file" > arraste TODOS os arquivos acima > Commit changes.
+  3. Settings > Pages > Source: "Deploy from a branch" > main > / (root) > Save.
+  4. Em 1 a 3 minutos: https://SEU-USUARIO.github.io/navi/
+  (Para atualizar depois: Add file > Upload files, envie os arquivos novos e Commit.
+   Abra o app 2 vezes para a versão nova aparecer.)
+
+PASSO 2 - Primeira abertura (COM internet)
+  1. Abra o endereço no Chrome do Android e toque em "Baixar mundo" (opcional, poucos MB).
+  2. Menu do Chrome (3 pontinhos) > "Instalar app".
+
+PASSO 3 - Baixar os mapas da sua região (COM internet, antes de sair)
+  Aba "Offline":
+   - Cidade: digite o nome > Procurar > escolha > "Detalhado" > Baixar.
+     Ou aproxime o mapa da área e toque em "Área da tela".
+   - Estado/região inteira: use "Estradas principais" (só rodovias e avenidas grandes).
+   - Cada bloco tem ~5 km (detalhado). O app baixa bloco por bloco e pode ser
+     interrompido e retomado. Há um limite por download; para áreas maiores, faça
+     vários downloads (blocos já baixados não baixam de novo).
+  Depois disso: mapa, busca, rotas e GPS funcionam em modo avião.
+
+USO
+  Botão de mira: liga o GPS do aparelho e centraliza (pede permissão de localização).
+  Botão da agulha: alterna "norte fixo no topo" e "mapa gira com a bússola".
+  Busca: ruas, bairros e locais baixados (sem acento, sem internet). Também aceita
+  coordenadas ("-23.30, -50.50"). Segurar o dedo no mapa cria um ponto.
+  Rota: escolha o destino > "Rota de carro" ou "Rota a pé" > "Iniciar navegação".
+  Bússola: aba "Bússola" (graus, N/S/L/O, coordenadas, precisão do GPS, calibração).
+
+COMO ESTE APP TRATA OS SENSORES
+  - Usa o GPS e a bússola reais do aparelho. Nada é simulado.
+  - Sem sinal, precisão baixa ou sensor sem leitura: o app avisa na tela e mostra "—".
+  - Velocidade: a do GPS; se o aparelho não informar, é calculada de posições reais
+    (marcada "calc."); se nem isso for possível, aparece "—".
+  - A bússola indica o norte MAGNÉTICO. Para norte verdadeiro, informe a declinação
+    em Mais > Ajustes (ou use a medição automática andando de carro/a pé).
+
+LIMITES CONHECIDOS (honestos)
+  - Rotas usam só os dados baixados: se o trajeto passa por região não baixada, não há rota.
+  - Tempo estimado vem do tipo de via (velocidades típicas), não do trânsito.
+  - Não considera proibições de conversão, pedágios nem trânsito.
+  - Busca por endereço com número da casa não existe offline (acha a rua).
+  - Mar/oceano não são desenhados nas áreas de ruas (só terra, rios e lagos).
+  - Downloads usam os servidores públicos do OpenStreetMap (Overpass): se estiverem
+    ocupados, o app tenta de novo. Use com moderação.
+
+CRÉDITOS
+  Mapas © OpenStreetMap contributors (ODbL). Países e cidades: Natural Earth.
